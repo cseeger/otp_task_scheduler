@@ -35,19 +35,33 @@ defmodule ExScheduler.Worker do
   end
 
   defp index_of_minimum(list) do
-    list |> Enum.with_index() |> Enum.min_by(fn {elem, _} -> elem end) |> elem(1)
+    list
+    |> Enum.with_index()
+    |> Enum.min_by(fn {elem, _} -> elem end)
+    |> elem(1)
   end
 
-  def handle_info(:work, state) do
+  def build_task_args(state) do
     job = Enum.at(state.jobs, state.next_job_index)
     module = Map.get(job, :module)
     function = Map.get(job, :function, @default_function)
     args = Map.get(job, :args, @default_args)
 
+    {module, function, args}
+  end
+
+  def handle_info(:work, state) do
+    {module, function, args} = build_task_args(state)
+
+    ref = self()
+
     Task.Supervisor.start_child(ExScheduler.TaskSupervisor, fn ->
       apply(module, function, args)
+      send(ref, {:task_args, {module, function, args}})
     end)
 
     {:noreply, state.jobs |> new_state() |> schedule_next_job()}
   end
+
+  def handle_info({:task_args, _args}, state), do: {:noreply, state}
 end
