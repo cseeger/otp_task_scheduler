@@ -53,15 +53,12 @@ defmodule ExScheduler.Worker do
   def handle_info(:work, state) do
     {module, function, args} = build_task_args(state)
 
-    ref = self()
-
     Task.Supervisor.start_child(ExScheduler.TaskSupervisor, fn ->
       apply(module, function, args)
-      send(ref, {:task_args, {module, function, args}})
     end)
 
     {:noreply, state.jobs |> new_state() |> schedule_next_job()}
   end
 
-  def handle_info({:task_args, _args}, state), do: {:noreply, state}
+  def handle_info(_msg, state), do: {:noreply, state}
 end
