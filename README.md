@@ -50,10 +50,14 @@ Fortunately, `Process.get("$callers")`  returns a list of callers for the curren
 
 During test execution, the spy will emit “regular” process messages to the parent, our `GenServer`, which we’ll intercept with `:erlang.trace/3` and verify with `assert_receive/3`.
 
-Changes to the `ExScheduler.Worker` code are limited to reimplementing the default `handle_info/3` as follows:
+Changes to the `ExScheduler.Worker` code are limited to the following:
+
+1. Reimplementation of the default `handle_info/3` as follows:
 
 `def handle_info(_msg, state), do: {:noreply, state}`
 
-Recall that any present implementation of `handle_info/3` in a `GenServer` will override the included (via `use`)  `handle_info/3` forcing us to reimplement.
+(Recall that any present implementation of `handle_info/3` in a `GenServer` will override the included (via `use`)  `handle_info/3` forcing us to reimplement.)
+
+2. Refactor: Extract method for defining the “MFA” Task arguments as `build_task_args/1`.
 
 Let me know if you have any questions. -Chad
