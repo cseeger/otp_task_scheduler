@@ -42,3 +42,18 @@ If using Phoenix Framework, you should pull this configuration from config.exs.
 - When `args` are ommited, the function is called with no attributes.
 - Cron expressions are evaluated over UTC time.
 
+## Testing
+
+Attempting to test  `Task` execution across process boundaries is ultimately a problem of observability. Specifically, the usage of `Task.Supervisor` severs the relationship between the process and the caller leaving no way for the caller to be explicitly aware of `Task` activity.
+
+Fortunately, `Process.get("$callers")`  returns a list of callers for the current process, which we then use to determine the PID of the parent process. This information allows us to implement a “spy” in our test cases to verify that `Task` activity is as expected.
+
+During test execution, the spy will emit “regular” process messages to the parent, our `GenServer`, which we’ll intercept with `:erlang.trace/3` and verify with `assert_receive/3`.
+
+Changes to the `ExScheduler.Worker` code are limited to reimplementing the default `handle_info/3` as follows:
+
+`def handle_info(_msg, state), do: {:noreply, state}`
+
+Recall that any present implementation of `handle_info/3` in a `GenServer` will override the included (via `use`)  `handle_info/3` forcing us to reimplement.
+
+Let me know if you have any questions. -Chad
