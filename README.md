@@ -1,5 +1,5 @@
 
-#### Firework Interview Assignment
+#### Goal
 Write tests to assert `ExScheduler.Worker` periodic behaviour in `test/ex_scheduler/worker_test.exs`.
 
 # ExScheduler
